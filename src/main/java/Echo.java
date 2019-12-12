@@ -7,20 +7,21 @@ import java.io.InputStreamReader;
  * @author wangqiupeng
  * @date 2019年12月11日19:02:52
  * @desc goReplay中间件脚本
+ * @reference  https://github.com/buger/goreplay/blob/master/examples/middleware/echo.java
  */
 public class Echo {
 
-
-    private static final String SPLITTER_HEADER_BODY_SPLITTER = "\r\n\r\n";
     private static final String SPLITTER_HEAD_FIRST_LINE = "\n";
     private static final String SPLITTER_HEADER_ITEM = " ";
     /**
+     * 来自官方说明
      * payload type, possible values: 1 - request, 2 - original response, 3 - replayed response
      */
     private static final String PAYLOAD_TYPE_REQUEST = "1";
-    private static final String PAYLOAD_TYPE_ORIGINAL_RESPONSE = "2";
 
-    //第一行项目数
+    /**
+     * 第一行项目数
+     */
     private static final int  FIRST_ITEMS = 3;
 
     /**
@@ -92,6 +93,7 @@ public class Echo {
                 System.out.println(encodedLine);
             }
         } catch (IOException e) {
+            System.out.println(e);
         }
     }
 
