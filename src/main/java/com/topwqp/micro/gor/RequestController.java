@@ -28,23 +28,21 @@ public class RequestController {
 
     @RequestMapping(value = "/www", method = RequestMethod.POST)
     public String test222(String json, Integer agencyId) {
-        String secondLine = "POST /v1/goRepay/test?aa=bb&c=9 HTTP/1.1";
+        String secondLine = "POST /v1/goRepay/test?rr=123 HTTP/1.1";
         String [] secondLineItem = secondLine.split(" ");
         String requestUrl = secondLineItem[1];
         LOG.info("url is {} ",requestUrl);
         int index = requestUrl.indexOf("?");
         String rewriteUrl = null;
         if (index > 0){
+            requestUrl = requestUrl.replaceAll("\\?","\\\\\\?");
+            LOG.info("request url is {} " , requestUrl);
             rewriteUrl = requestUrl + "&" + INJECT_TO_REQUEST_ENTITY_REQUEST_ID + "=111"  ;
         }else {
             rewriteUrl = requestUrl + "?" + INJECT_TO_REQUEST_ENTITY_REQUEST_ID + "=111" ;
         }
-        secondLineItem[1] = rewriteUrl;
-        StringBuilder result = new StringBuilder(20);
-        for (String item : secondLineItem){
-            result.append(item).append(" ");
-        }
-        LOG.info("result is  {} ", result.toString().substring(0,result.toString().length() -1));
+        String result = secondLine.replaceFirst(requestUrl,rewriteUrl);
+        LOG.info("result result is  {} ",result);
         return "test";
 
     }

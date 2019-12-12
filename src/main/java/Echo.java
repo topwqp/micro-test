@@ -64,25 +64,12 @@ public class Echo {
                 int index = requestUrl.indexOf("?");
                 String rewriteUrl = null;
                 if (index > 0){
+                    requestUrl = requestUrl.replaceAll("\\?","\\\\?");
                     rewriteUrl = requestUrl + "&" + INJECT_TO_REQUEST_ENTITY_REQUEST_ID + "=" + requestId ;
                 }else {
                     rewriteUrl = requestUrl + "?" + INJECT_TO_REQUEST_ENTITY_REQUEST_ID + "=" + requestId ;
                 }
-                secondListItems[1] =  rewriteUrl;
-                StringBuilder tempResult = new StringBuilder(20);
-                for (String item : secondListItems){
-                    tempResult.append(item).append(SPLITTER_HEADER_ITEM);
-                }
-                lines[1] = tempResult.toString().substring(0,tempResult.toString().length()-1);
-                StringBuilder stringBuilder = new StringBuilder(100);
-                for (int i=0;i<lines.length;i++){
-                    if (i== lines.length-1){
-                        stringBuilder.append(lines[i]).append(SPLITTER_HEAD_FIRST_LINE);
-                    }else{
-                        stringBuilder.append(lines[i]);
-                    }
-                }
-                result = stringBuilder.toString();
+                result = content.replaceFirst(requestUrl,rewriteUrl);
             }
         }
         return result;
