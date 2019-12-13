@@ -1,10 +1,13 @@
 package com.topwqp.micro.gor;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.math.BigDecimal;
 
 /**
  * @author wangqiupeng
@@ -19,12 +22,37 @@ public class RequestController {
     private static String INJECT_TO_REQUEST_ENTITY_REQUEST_ID = "RequestId";
 
     @RequestMapping(value = "/test", method = RequestMethod.POST)
-    public String test(String json, Integer agencyId) {
+    public MockDTO test(String json, Integer agencyId) {
         LOG.info("third repay notify params: json:[{}], agencyId:[{}]",json,agencyId);
-        String responseJson = "test test test test tests test test ";
+        String responseJson = "test test test test tests test test test test test test tests test test test test test test tests test test" +
+                "test test test test tests test testtest test test test tests test testtest test test test tests test testtest test test test tests test test ";
         LOG.info("test success ");
-        return responseJson;
+        MockDTO mockDTO = new MockDTO();
+        mockDTO.setId(1);
+        mockDTO.setName("wqp");
+        mockDTO.setDesc("desc");
+        mockDTO.setScope(BigDecimal.valueOf(5.43d));
+        //JSONObject origin = new JSONObject(mockDTO);
+        return mockDTO;
     }
+
+
+    @RequestMapping(value = "/jsonBody", method = RequestMethod.POST)
+    public GlobalResponseEntity<MockDTO> jsonBody(String json, Integer agencyId) {
+        LOG.info("third repay notify params: json:[{}], agencyId:[{}]",json,agencyId);
+        LOG.info("test success ");
+        MockDTO mockDTO = new MockDTO();
+        mockDTO.setId(1);
+        mockDTO.setName("wqp");
+        mockDTO.setDesc("desc");
+        mockDTO.setScope(BigDecimal.valueOf(5.43d));
+        GlobalResponseEntity responseEntity = GlobalResponseEntity.success("success",mockDTO);
+        LOG.info("response entity  info is {} ",responseEntity);
+        return responseEntity;
+    }
+
+
+
 
     @RequestMapping(value = "/www", method = RequestMethod.POST)
     public String test222(String json, Integer agencyId) {

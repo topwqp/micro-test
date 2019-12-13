@@ -8,7 +8,9 @@ package go.replay.middleware;
 public class ReqRespEntity {
     private String id;
 
-    //请求URL,包含了GET请求URL和POST请求的URL及请求体
+    /**
+     * 请求URL,包含了GET请求URL和POST请求的URL及请求体
+     */
     private StringBuilder requestUrl = new StringBuilder();
 
     private String responseContentType;

@@ -11,14 +11,16 @@ public class JsonCompare {
 
     public static void main(String[] args) {
         A  originObject = new JsonCompare.A();
-        originObject.setId("1");
         originObject.setName("2");
+        originObject.setId("1");
+        originObject.setValue(122);
         JSONObject origin = new JSONObject(originObject);
         System.out.println(origin.toString());
 
         B targetObject = new JsonCompare.B();
         targetObject.setId("1");
         targetObject.setName("2");
+        targetObject.setValue(323);
         JSONObject target = new JSONObject(targetObject);
         System.out.println(target.toString());
         System.out.println("-----------------------");
@@ -30,6 +32,15 @@ public class JsonCompare {
     public static class A{
         private String  name ;
         private String  id;
+        private Integer value;
+
+        public Integer getValue() {
+            return value;
+        }
+
+        public void setValue(Integer value) {
+            this.value = value;
+        }
 
         public String getName() {
             return name;
@@ -50,8 +61,18 @@ public class JsonCompare {
 
 
     public static class B{
+        private Integer value;
+
         private String id ;
         private String name ;
+
+        public Integer getValue() {
+            return value;
+        }
+
+        public void setValue(Integer value) {
+            this.value = value;
+        }
 
         public String getId() {
             return id;

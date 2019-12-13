@@ -89,7 +89,6 @@ public class JsonContentCompare {
      */
     private boolean compareObject(JSONObject jsonObj, JSONObject compareJsonObj, String jsonPath) {
         boolean result = true;
-
         Iterator<String> jsonKeys = jsonObj.keys();
         String parentPath = jsonPath;
         while (jsonKeys.hasNext()) {
