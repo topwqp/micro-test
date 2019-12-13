@@ -1,4 +1,4 @@
-package parse;
+package go.replay.middleware;
 
 /**
  * @author wangqiupeng

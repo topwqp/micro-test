@@ -1,4 +1,4 @@
-package parse;
+package go.replay.middleware;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
@@ -54,11 +54,11 @@ public class CompareHttpLog {
         Files.write("Http compare result", resultFile, Charsets.UTF_8);
         Files.append(lineSeparator, resultFile, Charsets.UTF_8);
 
-        Properties properties = new Properties();
-        properties.load(Class.class.getClassLoader().getSystemResourceAsStream(urlConfigurePropertyFile));
-        for (String url : properties.stringPropertyNames()) {
-            urlJsonIgnorePath.put(url, properties.getProperty(url));
-        }
+//        Properties properties = new Properties();
+//        properties.load(Class.class.getClassLoader().getSystemResourceAsStream(urlConfigurePropertyFile));
+//        for (String url : properties.stringPropertyNames()) {
+//            urlJsonIgnorePath.put(url, properties.getProperty(url));
+//        }
     }
 
     /**
@@ -89,13 +89,13 @@ public class CompareHttpLog {
             private ReqRespEntity entity;
 
             /**
-             * 标记解析请求响应的次数值,初始从1开始,每次碰到三个特殊的unicde字符开始的行自增1,
+             * 标记解析请求响应的次数值,初始从1开始,每次碰到三个特殊的unicode字符开始的行自增1,
              * 这样可以根据奇数偶数来判断当前是在处理请求还是在处理响应的内容
              */
             private int processReqResp = 1;
 
             /**
-             * 标记当前处理的是从实体开始的第几行(每个实体以三个特殊的unicde字符开始)
+             * 标记当前处理的是从实体开始的第几行(每个实体以三个特殊的unicode字符开始)
              */
             private int lineNumber = 0;
 
@@ -121,13 +121,13 @@ public class CompareHttpLog {
              */
             private int processChunkedContent = 0;
 
+            @Override
             public boolean processLine(String line) throws IOException {
                 if (line.startsWith("\uD83D\uDC35\uD83D\uDE48\uD83D\uDE49")) {
                     processReqResp++;//自增1
                     lineNumber = 0;//lineNumber值复位为0
                 } else {
                     lineNumber++;
-
                     if ((processReqResp & 1) != 0) {//在处理请求
                         if (lineNumber == 1) {//第一行,获取到标志ID
                             entity = new ReqRespEntity();
@@ -173,6 +173,7 @@ public class CompareHttpLog {
                 return true;
             }
 
+            @Override
             public List<ReqRespEntity> getResult() {
                 return result;
             }
@@ -226,9 +227,7 @@ public class CompareHttpLog {
         for (int i = 0; i < leftList.size(); i++) {
             ReqRespEntity leftEntity = leftList.get(i);
             String leftUrl = leftEntity.getRequestUrl().toString();
-
             ReqRespEntity rightEntity = null;
-
             for (int j = 0; j < rightList.size(); j++) {
                 if (leftUrl.equals(rightList.get(j).getRequestUrl().toString())) {
                     rightEntity = rightList.get(j);
@@ -278,10 +277,10 @@ public class CompareHttpLog {
     }
 
     public static void main(String[] args) throws Exception {
-        CompareHttpLog compareHttpLog = new CompareHttpLog("/Users/niwei/Downloads/gor-test-2016-07-22-19.log",
-                "/Users/niwei/Downloads/gor-online-2016-07-22-19.log",
-                "/Users/niwei/Downloads/compare-2016-07-22.log",
-                "go/urlJsonIgnorePath.properties");
+        CompareHttpLog compareHttpLog = new CompareHttpLog("/Users/topwqp/Documents/work/tech/bak/requests_0.gor",
+                "/Users/topwqp/Documents/work/tech/bak/replay_result_0.gor",
+                "/Users/topwqp/Documents/work/tech/bak/result.log",
+                "urlJsonIgnorePath.properties");
 
         compareHttpLog.compare();
 

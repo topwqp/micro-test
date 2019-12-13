@@ -1,26 +1,49 @@
-package parse;
+package go.replay.middleware;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.*;
 
+/**
+ * @author wangqiupeng
+ * @date 2019年12月13日11:06:05
+ * @desc 响应结果比较
+ */
 public class JsonContentCompare {
-    private static final String PATH_HEAD = "JSONHEAD";//json路径头定义
-    private static final String PATH_SPLITTER = "#";//json路径分隔符定义,选择正则表达式中不用的,避免解析正则表达式的时候处理麻烦
+    /**
+     * json路径头定义
+     */
+    private static final String PATH_HEAD = "JSONHEAD";
+    /**
+     * json路径分隔符定义,选择正则表达式中不用的,避免解析正则表达式的时候处理麻烦
+     */
+    private static final String PATH_SPLITTER = "#";
 
-    private String json;//原始json字符串
-    private String compareJson;//被比较的json字符串
-    private List<String> jsonPathList;//保存原始json的多有解析过的value的路径
-    private Set<String> ignorePahtSet;//比较路径黑名单,用于忽略某些路径值的比较
+    /**
+     * 原始json字符串
+     */
+    private String json;
+    /**
+     * 被比较的json字符串
+     */
+    private String compareJson;
+    /**
+     * 保存原始json的多有解析过的value的路径
+     */
+    private List<String> jsonPathList;
+    /**
+     * 比较路径黑名单,用于忽略某些路径值的比较
+     */
+    private Set<String> ignorePathSet;
 
-    public JsonContentCompare(String json, String compareJson, Set<String> ignorePahtSet) {
+    public JsonContentCompare(String json, String compareJson, Set<String> ignorePathSet) {
         this.json = json;
         this.compareJson = compareJson;
         this.jsonPathList = new ArrayList();
-        if (ignorePahtSet == null) {
-            ignorePahtSet = new HashSet<>();
+        if (ignorePathSet == null) {
+            ignorePathSet = new HashSet<>();
         }
-        this.ignorePahtSet = ignorePahtSet;
+        this.ignorePathSet = ignorePathSet;
     }
 
     public boolean compare() {
@@ -41,14 +64,13 @@ public class JsonContentCompare {
     }
 
     /**
-     * json的路径是否包含在ignorePahtSet中
-     *
+     * json的路径是否包含在ignorePathSet中
      * @param jsonPath
      * @return
      */
     private boolean isInIgnorePathJudge(String jsonPath) {
         boolean result = false;
-        for (String path : ignorePahtSet) {
+        for (String path : ignorePathSet) {
             if (jsonPath.matches(path)) {
                 result = true;
                 break;
@@ -74,10 +96,9 @@ public class JsonContentCompare {
             String jsonKey = jsonKeys.next();
             jsonPath = parentPath + PATH_SPLITTER + jsonKey;
             if (isInIgnorePathJudge(jsonPath)) {
-                //如果包含在ignorePahtSet中则忽略本次比较
+                //如果包含在ignorePathSet中则忽略本次比较
                 continue;
             }
-
             if (!compareJsonObj.has(jsonKey)) {
                 //如果被比较的json中没有该key直接返回false
                 result = false;
@@ -88,7 +109,6 @@ public class JsonContentCompare {
 
             //json的value通用比较方法
             result = compareJsonValue(jsonValue, compareJsonValue, jsonPath);
-
             if (!result) {
                 //result等于false,直接跳出循环,不再继续比较
                 break;
@@ -100,7 +120,6 @@ public class JsonContentCompare {
 
     /**
      * json数组比较
-     *
      * @param jsonArr        json数组
      * @param compareJsonArr 与json数组比较的json数组
      * @param jsonPath       json数组在原始json中所处的路径
@@ -108,15 +127,12 @@ public class JsonContentCompare {
      */
     private boolean compareArray(JSONArray jsonArr, JSONArray compareJsonArr, String jsonPath) {
         boolean result = true;
-
         String parentPath = jsonPath;
         for (int i = 0; i < jsonArr.length(); i++) {
             jsonPath = parentPath + "[" + i + "]";
-
             Object jsonValue = jsonArr.get(i);
             Object compareJsonValue = compareJsonArr.get(i);
             result = compareJsonValue(jsonValue, compareJsonValue, jsonPath);
-
             if (!result) {
                 //result等于false,直接跳出循环,不再继续比较
                 break;
