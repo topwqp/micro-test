@@ -1,4 +1,4 @@
-package go.middleware;
+package go.replay.middleware;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.BufferedReader;
