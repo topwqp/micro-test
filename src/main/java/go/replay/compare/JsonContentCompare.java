@@ -1,4 +1,4 @@
-package go.replay.middleware;
+package go.replay.compare;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -31,19 +31,11 @@ public class JsonContentCompare {
      * 保存原始json的多有解析过的value的路径
      */
     private List<String> jsonPathList;
-    /**
-     * 比较路径黑名单,用于忽略某些路径值的比较
-     */
-    private Set<String> ignorePathSet;
 
-    public JsonContentCompare(String json, String compareJson, Set<String> ignorePathSet) {
+    public JsonContentCompare(String json, String compareJson) {
         this.json = json;
         this.compareJson = compareJson;
         this.jsonPathList = new ArrayList();
-        if (ignorePathSet == null) {
-            ignorePathSet = new HashSet<>();
-        }
-        this.ignorePathSet = ignorePathSet;
     }
 
     public boolean compare() {
@@ -64,22 +56,6 @@ public class JsonContentCompare {
     }
 
     /**
-     * json的路径是否包含在ignorePathSet中
-     * @param jsonPath
-     * @return
-     */
-    private boolean isInIgnorePathJudge(String jsonPath) {
-        boolean result = false;
-        for (String path : ignorePathSet) {
-            if (jsonPath.matches(path)) {
-                result = true;
-                break;
-            }
-        }
-        return result;
-    }
-
-    /**
      * json对象比较
      *
      * @param jsonObj        json对象
@@ -94,10 +70,6 @@ public class JsonContentCompare {
         while (jsonKeys.hasNext()) {
             String jsonKey = jsonKeys.next();
             jsonPath = parentPath + PATH_SPLITTER + jsonKey;
-            if (isInIgnorePathJudge(jsonPath)) {
-                //如果包含在ignorePathSet中则忽略本次比较
-                continue;
-            }
             if (!compareJsonObj.has(jsonKey)) {
                 //如果被比较的json中没有该key直接返回false
                 result = false;
@@ -150,11 +122,6 @@ public class JsonContentCompare {
      */
     private boolean comparePlain(Object jsonValue, Object compareJsonValue, String jsonPath) {
         boolean result = true;
-
-        if (isInIgnorePathJudge(jsonPath)) {
-            return result;
-        }
-
         // 直接比较字符串内容
         if (jsonValue != null && !jsonValue.equals(compareJsonValue)) {
             result = false;
@@ -172,11 +139,6 @@ public class JsonContentCompare {
      */
     private boolean compareJsonValue(Object jsonValue, Object compareJsonValue, String jsonPath) {
         boolean result = true;
-
-        if (isInIgnorePathJudge(jsonPath)) {
-            return result;
-        }
-
         if (jsonValue instanceof JSONArray) {
             if (!(compareJsonValue instanceof JSONArray)) {
                 //如果两个json对象类型不一样,直接返回false
@@ -207,12 +169,7 @@ public class JsonContentCompare {
 
         String jsonStr2 = "{\"result\":\"ok\",\"msg\":\"操作成功\",\"code\":200,\"data\":{\"LOCATION_SECOND\":{\"promotionId\":102,\"linkUrl\":\"http://t.cn/RqFwUhW\",\"promotionType\":\"SECOND_KILL\",\"showImgUrl\":\"http://static2.8dol.com/homeAds/secondkill.jpg\",\"homeShowType\":\"PROMOTION\",\"typeName\":\"秒杀\",\"timeDiff\":26631850,\"secondKillType\":\"END\"},\"LOCATION_FIRST\":{\"promotionId\":0,\"linkUrl\":\"\",\"promotionType\":null,\"showImgUrl\":\"http://static2.8dol.com/homeAds/first.jpg\",\"homeShowType\":\"DAY\",\"typeName\":\"默认广告位1显示\",\"timeDiff\":0,\"secondKillType\":null},\"LOCATION_THIRD\":{\"promotionId\":0,\"linkUrl\":\"\",\"promotionType\":null,\"showImgUrl\":\"http://static2.8dol.com/homeAds/third.jpg\",\"homeShowType\":\"INVITE\",\"typeName\":\"默认广告位2显示\",\"timeDiff\":0,\"secondKillType\":null}},\"rescode\":200}";
 
-        Set<String> blackPathSet = new HashSet<>();
-        blackPathSet.add(PATH_HEAD + PATH_SPLITTER + ".*LOCATION_SECOND.*");
-        blackPathSet.add(PATH_HEAD + PATH_SPLITTER + ".*LOCATION_THIRD.*");
-        blackPathSet.add(PATH_HEAD + PATH_SPLITTER + ".*LOCATION_FIRST.*");
-
-        JsonContentCompare jsonContentCompare = new JsonContentCompare(jsonStr1, jsonStr2, blackPathSet);
+        JsonContentCompare jsonContentCompare = new JsonContentCompare(jsonStr1, jsonStr2);
 
         System.out.println("对象比较结果:" + jsonContentCompare.compare());
 
@@ -222,24 +179,6 @@ public class JsonContentCompare {
             System.out.println(path);
         });
 
-        /*String jsonStr1 = "{\"result\":\"ok\",\"msg\":\"登录成功\",\"code\":200,\"data\":{\"username\":\"18625150155\",\"mobile\":\"18625150155\",\"email\":\"\",\"status\":1,\"head_ico\":\"\",\"lock_reason\":\"\",\"open_id_app\":\"\",\"union_id\":\"\",\"verify_code\":\"Toalzwd-gppx-CUEL2WFYDLFPKXIZ54URGAR6IM-xo\",\"bind_mobile\":1,\"isBind8Dol\":1,\"user_id\":\"a4b55123100c8fcb733e7ded03465967b58017b3\",\"is_Vip\":false,\"vip_expire_time\":\"\"},\"rescode\":200,\"timestamp\":1469009437228}";
 
-        String jsonStr2 = "{\"result\":\"ok\",\"msg\":\"操作成功\",\"code\":200,\"data\":[],\"rescode\":200}";
-
-        Set<String> blackPathSet = new HashSet<>();
-        blackPathSet.add(".*#msg");
-        blackPathSet.add(".*#data");
-        blackPathSet.add(".*#timestamp");
-
-
-        JsonContentCompare jsonContentCompare = new JsonContentCompare(jsonStr1, jsonStr2, blackPathSet);
-
-        System.out.println("对象比较结果:" + jsonContentCompare.compare());
-
-        System.out.println("对象比较路径:");
-
-        jsonContentCompare.getJsonPathList().forEach(path -> {
-            System.out.println(path);
-        });*/
     }
 }

@@ -44,13 +44,30 @@ public class RequestController {
         MockDTO mockDTO = new MockDTO();
         mockDTO.setId(1);
         mockDTO.setName("wqp");
-        mockDTO.setDesc("desc");
+        mockDTO.setDesc("fffff");
         mockDTO.setScope(BigDecimal.valueOf(5.43d));
         GlobalResponseEntity responseEntity = GlobalResponseEntity.success("success",mockDTO);
         LOG.info("response entity  info is {} ",responseEntity);
         return responseEntity;
     }
 
+
+
+    @RequestMapping(value = "/testString", method = RequestMethod.POST)
+    public String testString() {
+        return "test";
+    }
+
+
+    @RequestMapping(value = "/testObject", method = RequestMethod.POST)
+    public MockDTO testObject() {
+        MockDTO mockDTO = new MockDTO();
+        mockDTO.setId(1);
+        mockDTO.setName("wqp");
+        mockDTO.setDesc("desc");
+        mockDTO.setScope(BigDecimal.valueOf(5.43d));
+        return mockDTO;
+    }
 
 
 

@@ -1,18 +1,12 @@
-package go.replay.middleware;
+package go.replay.compare;
 
 /**
  * @author wangqiupeng
  * @desc 请求响应实体
  * @date 2019年12月12日17:54:54
  */
-public class ReqRespEntity {
+public class HttpResponseEntity {
     private String id;
-
-    /**
-     * 请求URL,包含了GET请求URL和POST请求的URL及请求体
-     */
-    private StringBuilder requestUrl = new StringBuilder();
-
     private String responseContentType;
     private String responseTransferEncoding;
     private boolean isResponseJson = false;
@@ -25,14 +19,6 @@ public class ReqRespEntity {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public StringBuilder getRequestUrl() {
-        return requestUrl;
-    }
-
-    public void setRequestUrl(StringBuilder requestUrl) {
-        this.requestUrl = requestUrl;
     }
 
     public String getResponseContentType() {
@@ -79,7 +65,6 @@ public class ReqRespEntity {
     public String toString() {
         return "ReqRespEntity{" +
                 "id='" + id + '\'' +
-                ", requestUrl=" + requestUrl +
                 ", responseContentType='" + responseContentType + '\'' +
                 ", responseTransferEncoding='" + responseTransferEncoding + '\'' +
                 ", isResponseJson=" + isResponseJson +
