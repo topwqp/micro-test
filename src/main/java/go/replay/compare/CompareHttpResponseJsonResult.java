@@ -3,9 +3,10 @@ package go.replay.compare;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
+import com.topwqp.micro.gor.Constants;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,18 +25,13 @@ public class CompareHttpResponseJsonResult {
      */
     private static final Splitter httpParseSplitter = Splitter.on(" ");
 
-    /**
-     * properties文件解析时用到的分割器
-     */
-    private static final Splitter propertiesParseSplitter = Splitter.on(",");
-
-    public static final String ONE = "1";
-
     private String leftFileName;
 
     private String rightFileName;
 
     private File resultFile;
+
+
 
     /**
      * @param leftFileName             比较文件路径
@@ -73,10 +69,9 @@ public class CompareHttpResponseJsonResult {
      * @return
      * @throws Exception
      */
-    private List<HttpResponseEntity> parseFile(String fileName) throws Exception {
-        List<HttpResponseEntity> readLines = Files.readLines(new File(fileName), Charsets.UTF_8, new LineProcessor<List<HttpResponseEntity>>() {
-            private List<HttpResponseEntity> result = Lists.newArrayList();
-
+    private Map<String,HttpResponseEntity> parseFile(String fileName) throws Exception {
+        Map<String,HttpResponseEntity> readLines = Files.readLines(new File(fileName), Charsets.UTF_8, new LineProcessor<Map<String,HttpResponseEntity>>() {
+            private Map<String,HttpResponseEntity>   map = Maps.newHashMap();
             /**
              * 每一个请求响应解析结果所保存的对象
              */
@@ -86,7 +81,6 @@ public class CompareHttpResponseJsonResult {
              * 标记当前处理的是从实体开始的第几行(每个实体以三个特殊的unicode字符开始)
              */
             private int lineNumber = 0;
-
 
             /**
              * true代表是响应，false代表是请求
@@ -109,8 +103,9 @@ public class CompareHttpResponseJsonResult {
 
             @Override
             public boolean processLine(String line) throws IOException {
-                if (line.startsWith("\uD83D\uDC35\uD83D\uDE48\uD83D\uDE49")) {
-                    lineNumber = 0;//lineNumber值复位为0
+                if (line.startsWith(Constants.START_FLAG)) {
+                    //lineNumber值复位为0
+                    lineNumber = 0;
                     isResponse = false;
                     isResponseBody = false;
                     processChunkedContent = 0;
@@ -120,35 +115,42 @@ public class CompareHttpResponseJsonResult {
                         //第一项代表响应， 2、3代表响应结果， 1代表请求
                         String type =Iterables.get(httpParseSplitter.split(line), 0);
                         // 为2、3 代表响应， 2代表原始响应， 3代表回放响应
-                        if (!ONE.equals(type)){
+                        if (!Constants.ONE.equals(type)){
                             //第二项表示标志ID
                             isResponse = true;
                             entity = new HttpResponseEntity();
                             entity.setId(Iterables.get(httpParseSplitter.split(line), 1));
-                            result.add(entity);
+                            map.put(entity.getId(),entity);
                         }
                     }else {
                         if (isResponse){
                             //在处理响应
                             if (line.equals("")) {
                                 isResponseBody = true;
-                            } else if (line.startsWith("Transfer-Encoding")) {
-                                entity.setResponseTransferEncoding(Iterables.get(httpParseSplitter.split(line), 1));//第二项表示Transfer-Encoding的内容
-                            } else if (line.startsWith("Content-Type")) {
-                                entity.setResponseContentType(Iterables.get(httpParseSplitter.split(line), 1));//第二项表示Content-Type的内容
-                                if (entity.getResponseContentType().startsWith("application/json")) {
-                                    entity.setResponseJson(true);//表示响应内容为json格式
+                            } else if (line.startsWith(Constants.TRANSFER_ENCODING)) {
+                                //第二项表示Transfer-Encoding的内容
+                                entity.setResponseTransferEncoding(Iterables.get(httpParseSplitter.split(line), 1));
+                            } else if (line.startsWith(Constants.CONTENT_TYPE)) {
+                                //第二项表示Content-Type的内容
+                                entity.setResponseContentType(Iterables.get(httpParseSplitter.split(line), 1));
+                                if (entity.getResponseContentType().startsWith(Constants.APPLICATION_JSON)) {
+                                    //表示响应内容为json格式
+                                    entity.setResponseJson(true);
                                 }
-                            } else if (line.startsWith("Content-Length")) {
-                                entity.setResponseContentLength(Iterables.get(httpParseSplitter.split(line), 1));//第二项表示Content-Length的内容
+                            } else if (line.startsWith(Constants.CONTENT_LENGTH)) {
+                                //第二项表示Content-Length的内容
+                                entity.setResponseContentLength(Iterables.get(httpParseSplitter.split(line), 1));
                             } else if (isResponseBody) {
-                                if (entity.getResponseTransferEncoding() != null) {//表示响应的内容是用Chunked编码
+                                //表示响应的内容是用Chunked编码
+                                if (entity.getResponseTransferEncoding() != null) {
                                     processChunkedContent++;
-                                    if ((processChunkedContent & 1) == 0) {//在处理Chunked内容
+                                    //处理Chunked内容
+                                    if ((processChunkedContent & 1) == 0) {
                                         entity.getResponseContent().append(line);
                                     }
                                 }
-                                if (entity.getResponseContentLength() != null) {//表示响应的内容是用正常编码
+                                //表示响应的内容是用正常编码
+                                if (entity.getResponseContentLength() != null) {
                                     entity.getResponseContent().append(line);
                                 }
                             }
@@ -159,8 +161,8 @@ public class CompareHttpResponseJsonResult {
             }
 
             @Override
-            public List<HttpResponseEntity> getResult() {
-                return result;
+            public Map<String,HttpResponseEntity> getResult() {
+                return map;
             }
         });
 
@@ -176,6 +178,12 @@ public class CompareHttpResponseJsonResult {
      * @return
      */
     private boolean isContentSame(String leftContent, String rightContent, boolean isJson) {
+        //分别对内容进行MD5比较，如果MD5值相等，必相等，否则，再进行进一步比较
+        String leftContentMD5 = MD5Util.getMD5String(leftContent);
+        String rightContentMD5 = MD5Util.getMD5String(rightContent);
+        if (leftContentMD5.equals(rightContentMD5)){
+            return true;
+        }
         boolean result;
         if (isJson) {
             JsonContentCompare jsonContentCompare = new JsonContentCompare(leftContent, rightContent);
@@ -193,42 +201,32 @@ public class CompareHttpResponseJsonResult {
      * @throws Exception
      */
     public void compare() throws Exception {
-        List<HttpResponseEntity> leftList = parseFile(leftFileName);
-        append("left file 总行数:" + leftList.size());
-        List<HttpResponseEntity> rightList = parseFile(rightFileName);
-        append("right file 总行数:" + rightList.size());
-        for (int i = 0; i < leftList.size(); i++) {
-            HttpResponseEntity leftEntity = leftList.get(i);
-            String leftId = leftEntity.getId();
-            HttpResponseEntity rightEntity = null;
-            for (int j = 0; j < rightList.size(); j++) {
-                if (leftId.equals(rightList.get(j).getId())) {
-                    rightEntity = rightList.get(j);
-                    break;
-                }
-            }
-            if (rightEntity == null) {
+        Map<String,HttpResponseEntity> leftMap = parseFile(leftFileName);
+        append("left file 总行数:" + leftMap.size());
+        Map<String,HttpResponseEntity> rightMap = parseFile(rightFileName);
+        append("right file 总行数:" + rightMap.size());
+        for (Map.Entry<String,HttpResponseEntity> entry : leftMap.entrySet()){
+            HttpResponseEntity  leftResponse =  entry.getValue();
+            HttpResponseEntity  rightResponse = rightMap.get(entry.getKey());
+            if (rightResponse == null) {
                 continue;
             }
-            String rightId = rightEntity.getId();
-
-            String leftResponseContent = leftEntity.getResponseContent().toString();
-            String rightResponseContent = rightEntity.getResponseContent().toString();
-
+            String leftResponseContent = leftResponse.getResponseContent().toString();
+            String rightResponseContent = rightResponse.getResponseContent().toString();
             /**
              * 将响应报文比较后不同的响应内容记录到结果文件
              */
-            if (!isContentSame(leftResponseContent, rightResponseContent, leftEntity.isResponseJson())) {
+            if (!isContentSame(leftResponseContent, rightResponseContent, leftResponse.isResponseJson())) {
                 append("===================================");
-                append(leftId);
+                append(leftResponse.getId());
                 append("");
-                append(rightId);
+                append(rightResponse.getId());
                 append("");
                 append("left 响应内容 :");
-                append(leftEntity.getResponseContent().toString());
+                append(leftResponse.getResponseContent().toString());
                 append("");
                 append("right 响应内容 :");
-                append(rightEntity.getResponseContent().toString());
+                append(rightResponse.getResponseContent().toString());
                 append("===================================");
                 append("");
                 append("");
@@ -238,9 +236,10 @@ public class CompareHttpResponseJsonResult {
     }
 
     public static void main(String[] args) throws Exception {
-        CompareHttpResponseJsonResult compareHttpResponseJsonResult = new CompareHttpResponseJsonResult("/Users/topwqp/Documents/work/tech/mul_json_bak/online_mul_0.gor",
-                "/Users/topwqp/Documents/work/tech/mul_json_bak/test_mul_0.gor",
-                "/Users/topwqp/Documents/work/tech/mul_json_bak/result.gor");
+        CompareHttpResponseJsonResult compareHttpResponseJsonResult = new CompareHttpResponseJsonResult(
+                "/Users/topwqp/Documents/work/tech/json_array_bak/online_array_0.gor",
+                "/Users/topwqp/Documents/work/tech/json_array_bak/test_array_0.gor",
+                "/Users/topwqp/Documents/work/tech/json_array_bak/result.gor");
         compareHttpResponseJsonResult.compare();
 
     }

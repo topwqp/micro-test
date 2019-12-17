@@ -40,11 +40,9 @@ public class JsonContentCompare {
 
     public boolean compare() {
         boolean result = false;
-
         if (json == null || json.trim().equals("") || compareJson == null || compareJson.trim().equals("")) {
             return result;
         }
-
         JSONObject jsonObj = new JSONObject(json);
         JSONObject compareJsonObj = new JSONObject(compareJson);
         String jsonPath = PATH_HEAD;
@@ -57,7 +55,6 @@ public class JsonContentCompare {
 
     /**
      * json对象比较
-     *
      * @param jsonObj        json对象
      * @param compareJsonObj 与json对象比较的json对象
      * @param jsonPath       json对象在原始json中所处的路径
@@ -77,7 +74,6 @@ public class JsonContentCompare {
             }
             Object compareJsonValue = compareJsonObj.get(jsonKey);
             Object jsonValue = jsonObj.get(jsonKey);
-
             //json的value通用比较方法
             result = compareJsonValue(jsonValue, compareJsonValue, jsonPath);
             if (!result) {
@@ -131,7 +127,6 @@ public class JsonContentCompare {
 
     /**
      * 比较json的value,需要根据实际json类型执行不同的解析路径
-     *
      * @param jsonValue        原始json解析后的value
      * @param compareJsonValue 原始被比较json解析后的value
      * @param jsonPath         jsonValue在原始json中所处的路径

@@ -1,5 +1,6 @@
 package com.topwqp.micro.gor;
 
+import com.google.common.collect.Lists;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author wangqiupeng
@@ -37,20 +40,37 @@ public class RequestController {
     }
 
 
-    @RequestMapping(value = "/jsonBody", method = RequestMethod.POST)
-    public GlobalResponseEntity<MockDTO> jsonBody(String json, Integer agencyId) {
+    @RequestMapping(value = "/jsonArray", method = RequestMethod.POST)
+    public GlobalResponseEntity<List<MockDTO>> jsonArray(String json, Integer agencyId) {
         LOG.info("third repay notify params: json:[{}], agencyId:[{}]",json,agencyId);
         LOG.info("test success ");
-        MockDTO mockDTO = new MockDTO();
-        mockDTO.setId(1);
-        mockDTO.setName("wqp");
-        mockDTO.setDesc("fffff");
-        mockDTO.setScope(BigDecimal.valueOf(5.43d));
-        GlobalResponseEntity responseEntity = GlobalResponseEntity.success("success",mockDTO);
+        List<MockDTO> mockList = new ArrayList<>(100);
+        for (int i = 0; i <100 ; i++) {
+            MockDTO mockDTO = new MockDTO();
+            mockDTO.setId(1);
+            mockDTO.setName("wqp");
+            mockDTO.setDesc("fffff");
+            mockDTO.setScope(BigDecimal.valueOf(5.43d));
+            mockList.add(mockDTO);
+        }
+        GlobalResponseEntity responseEntity = GlobalResponseEntity.success("success",mockList);
         LOG.info("response entity  info is {} ",responseEntity);
         return responseEntity;
     }
 
+    @RequestMapping(value = "/jsonBody", method = RequestMethod.POST)
+    public GlobalResponseEntity<MockDTO> jsonBody(String json, Integer agencyId) {
+        LOG.info("third repay notify params: json:[{}], agencyId:[{}]",json,agencyId);
+        LOG.info("test success ");
+            MockDTO mockDTO = new MockDTO();
+            mockDTO.setId(1);
+            mockDTO.setName("wqp");
+            mockDTO.setDesc("fffff");
+            mockDTO.setScope(BigDecimal.valueOf(5.43d));
+        GlobalResponseEntity responseEntity = GlobalResponseEntity.success("success",mockDTO);
+        LOG.info("response entity  info is {} ",responseEntity);
+        return responseEntity;
+    }
 
 
     @RequestMapping(value = "/testString", method = RequestMethod.POST)
