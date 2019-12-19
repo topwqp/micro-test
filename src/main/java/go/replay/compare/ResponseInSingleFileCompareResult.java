@@ -10,14 +10,14 @@ import com.topwqp.micro.gor.Constants;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Map;
 
 /**
- * @author wangqiupeng
- * @desc 比较http response json result
- * @date 2019年12月16日11:14:39
+ * @author  wangqiupeng
+ * @date 2019年12月19日14:05:16
+ * @desc 响应在单个文件中的比较处理，请求和响应信息在单个文件中
  */
-public class CompareHttpResponseJsonResult {
+public class ResponseInSingleFileCompareResult {
     private static final String lineSeparator = System.getProperty("line.separator");
 
     /**
@@ -25,27 +25,19 @@ public class CompareHttpResponseJsonResult {
      */
     private static final Splitter httpParseSplitter = Splitter.on(" ");
 
-    private String leftFileName;
-
-    private String rightFileName;
+    private String inputFile;
 
     private File resultFile;
 
 
 
     /**
-     * @param leftFileName             比较文件路径
-     * @param rightFileName            被比较文件路径
+     * @param inputFile             比较文件路径
      * @param resultFileName           输出的结果文件路径
      * @throws IOException
      */
-    public CompareHttpResponseJsonResult(String leftFileName, String rightFileName, String resultFileName) throws IOException {
-        this.leftFileName = leftFileName;
-        this.rightFileName = rightFileName;
-
-        /**
-         * 比较结果文件处理
-         */
+    public ResponseInSingleFileCompareResult(String inputFile, String resultFileName) throws IOException {
+        this.inputFile = inputFile;
         this.resultFile = new File(resultFileName);
         Files.write("Http compare result", resultFile, Charsets.UTF_8);
         Files.append(lineSeparator, resultFile, Charsets.UTF_8);
@@ -69,9 +61,12 @@ public class CompareHttpResponseJsonResult {
      * @return
      * @throws Exception
      */
-    private Map<String,HttpResponseEntity> parseFile(String fileName) throws Exception {
-        Map<String,HttpResponseEntity> readLines = Files.readLines(new File(fileName), Charsets.UTF_8, new LineProcessor<Map<String,HttpResponseEntity>>() {
-            private Map<String,HttpResponseEntity>   map = Maps.newHashMap();
+    private Map<String,Map<String,HttpResponseEntity>> parseFile(String fileName) throws Exception {
+        Map<String,Map<String,HttpResponseEntity>> readLines = Files.readLines(new File(fileName), Charsets.UTF_8, new LineProcessor<Map<String,Map<String,HttpResponseEntity>>>() {
+            private Map<String,HttpResponseEntity>   originResponse = Maps.newHashMap();
+            private Map<String,HttpResponseEntity>   replayResponse = Maps.newHashMap();
+            private Map<String,Map<String,HttpResponseEntity>>  map = Maps.newHashMap();
+
             /**
              * 每一个请求响应解析结果所保存的对象
              */
@@ -115,12 +110,18 @@ public class CompareHttpResponseJsonResult {
                         //第一项代表响应， 2、3代表响应结果， 1代表请求
                         String type =Iterables.get(httpParseSplitter.split(line), 0);
                         // 为2、3 代表响应， 2代表原始响应， 3代表回放响应
-                        if (!Constants.ONE.equals(type)){
+                        if (Constants.TWO.equals(type)){
                             //第二项表示标志ID
                             isResponse = true;
                             entity = new HttpResponseEntity();
                             entity.setId(Iterables.get(httpParseSplitter.split(line), 1));
-                            map.put(entity.getId(),entity);
+                            originResponse.put(entity.getId(),entity);
+                        }else if(Constants.THREE.equals(type)){
+                            //第二项表示标志ID
+                            isResponse = true;
+                            entity = new HttpResponseEntity();
+                            entity.setId(Iterables.get(httpParseSplitter.split(line), 1));
+                            replayResponse.put(entity.getId(),entity);
                         }
                     }else {
                         if (isResponse){
@@ -150,7 +151,7 @@ public class CompareHttpResponseJsonResult {
                                     }
                                 }
                                 //表示响应的内容是用正常编码
-                                if (entity.getResponseContentLength() != null) {
+                                if (entity.getResponseTransferEncoding() == null) {
                                     entity.getResponseContent().append(line);
                                 }
                             }
@@ -161,7 +162,9 @@ public class CompareHttpResponseJsonResult {
             }
 
             @Override
-            public Map<String,HttpResponseEntity> getResult() {
+            public Map<String,Map<String,HttpResponseEntity>> getResult() {
+                map.put("originResponse",originResponse);
+                map.put("replayResponse",replayResponse);
                 return map;
             }
         });
@@ -201,9 +204,10 @@ public class CompareHttpResponseJsonResult {
      * @throws Exception
      */
     public void compare() throws Exception {
-        Map<String,HttpResponseEntity> leftMap = parseFile(leftFileName);
+        Map<String,Map<String,HttpResponseEntity>> resultMap = parseFile(inputFile);
+        Map<String,HttpResponseEntity>  leftMap = resultMap.get("originResponse");
         append("left file 总行数:" + leftMap.size());
-        Map<String,HttpResponseEntity> rightMap = parseFile(rightFileName);
+        Map<String,HttpResponseEntity> rightMap = resultMap.get("replayResponse");
         append("right file 总行数:" + rightMap.size());
         for (Map.Entry<String,HttpResponseEntity> entry : leftMap.entrySet()){
             HttpResponseEntity  leftResponse =  entry.getValue();
@@ -236,10 +240,9 @@ public class CompareHttpResponseJsonResult {
     }
 
     public static void main(String[] args) throws Exception {
-        CompareHttpResponseJsonResult compareHttpResponseJsonResult = new CompareHttpResponseJsonResult(
-                "/Users/topwqp/Documents/work/tech/test/output_0.txt",
-                "/Users/topwqp/Documents/work/tech/test/output_1.txt",
-                "/Users/topwqp/Documents/work/tech/test/result.gor");
+        ResponseInSingleFileCompareResult compareHttpResponseJsonResult = new ResponseInSingleFileCompareResult(
+                "/Users/topwqp/Documents/work/tech/test/request_12.txt",
+                "/Users/topwqp/Documents/work/tech/test/result.txt");
         compareHttpResponseJsonResult.compare();
 
     }
