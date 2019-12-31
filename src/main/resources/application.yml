@@ -1,6 +1,5 @@
 spring:
   application:
-    #micro-biz-core 定义应用程序名称(在POM文件中加载，需要在POM文件中配置插件实现 见 ‘maven-resources-plugin’)
     name: '@pom.name@'
   profiles:
     #设定默认激活的profile
@@ -9,10 +8,6 @@ security:
   basic:
     #禁用springboot安全
     enabled: false
-
-encrypt:
-  #定义密码加密key值，将
-  key: xsjf123.com #或使用环境变量ENCRYPT_KEY将其从纯文本配置文件中删除
 
 logging:
   #logback配置文件

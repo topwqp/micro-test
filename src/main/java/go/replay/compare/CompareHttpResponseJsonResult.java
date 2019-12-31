@@ -145,7 +145,7 @@ public class CompareHttpResponseJsonResult {
                                 if (entity.getResponseTransferEncoding() != null) {
                                     processChunkedContent++;
                                     //处理Chunked内容
-                                    if ((processChunkedContent & 1) == 0) {
+                                    if ((processChunkedContent & 1) == 0 ) {
                                         entity.getResponseContent().append(line);
                                     }
                                 }

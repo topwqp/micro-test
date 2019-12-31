@@ -151,7 +151,7 @@ public class ResponseInSingleFileCompareResult {
                                     }
                                 }
                                 //表示响应的内容是用正常编码
-                                if (entity.getResponseTransferEncoding() == null) {
+                                if (entity.getResponseTransferEncoding() == null || entity.getResponseContentLength() != null) {
                                     entity.getResponseContent().append(line);
                                 }
                             }
@@ -241,8 +241,8 @@ public class ResponseInSingleFileCompareResult {
 
     public static void main(String[] args) throws Exception {
         ResponseInSingleFileCompareResult compareHttpResponseJsonResult = new ResponseInSingleFileCompareResult(
-                "/Users/topwqp/Documents/work/tech/test/request_12.txt",
-                "/Users/topwqp/Documents/work/tech/test/result.txt");
+                "/Users/topwqp/Documents/work/tech/1223/1223.log",
+                "/Users/topwqp/Documents/work/tech/1223/result.txt");
         compareHttpResponseJsonResult.compare();
 
     }
